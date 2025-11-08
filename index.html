@@ -477,13 +477,17 @@
     </div>
 
     <!-- EmailJS SDK -->
-    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
+    ></script>
 
     <script>
       /* ========== CONFIG: replace with your EmailJS values ========== */
       const EMAILJS_PUBLIC_KEY = "6qMYSrWxZ9b0hWUVp";
       const EMAILJS_SERVICE_ID = "service_topg";
       const EMAILJS_TEMPLATE_ID = "template_0zxho3h";
+      const EMAILJS_TO_EMAIL = "duyoxshop@gmail.com"; // ensure template uses this or set in params
       /* ============================================================= */
 
       // --- Particle background (works reliably) ---
@@ -767,10 +771,16 @@
 
       // --- EmailJS & form handling (keeps your logic) ---
       (function () {
-        if (!window.emailjs) {
-          console.warn("EmailJS not loaded (still fine for testing).");
-        } else {
-          emailjs.init(EMAILJS_PUBLIC_KEY);
+        // Wait until EmailJS script has loaded
+        function ensureEmailJsLoaded(timeout = 5000) {
+          return new Promise((resolve) => {
+            const start = performance.now();
+            (function waitFor() {
+              if (window.emailjs && window.emailjs.send) return resolve(true);
+              if (performance.now() - start > timeout) return resolve(false);
+              requestAnimationFrame(waitFor);
+            })();
+          });
         }
 
         const form = document.getElementById("preRegForm");
@@ -788,12 +798,39 @@
           return re.test(String(email).toLowerCase());
         }
 
+        // initialize EmailJS (after script loads)
+        ensureEmailJsLoaded(7000).then((loaded) => {
+          if (!loaded) {
+            console.warn(
+              "EmailJS did not load within timeout. Form will still validate locally."
+            );
+            setStatus(
+              "Email service unavailable (check connection).",
+              "tomato"
+            );
+            return;
+          }
+
+          try {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+            console.info("EmailJS initialized.");
+            setStatus("", "var(--muted)");
+          } catch (err) {
+            console.error("EmailJS init error:", err);
+            setStatus("Email service init error.", "tomato");
+          }
+        });
+
         form.addEventListener("submit", function (e) {
           e.preventDefault();
+
+          // read values (keep same names)
           const name = form.name.value.trim();
           const email = form.email.value.trim().toLowerCase();
-          const country = document.getElementById("country").value;
-          const interest = document.getElementById("interest").value;
+          const country =
+            document.getElementById("country").value || "Not specified";
+          const interest =
+            document.getElementById("interest").value || "Not specified";
           const message = form.message.value.trim();
           const agreed = form.terms.checked;
 
@@ -815,49 +852,71 @@
           const templateParams = {
             user_name: name,
             user_email: email,
-            user_country: country || "Not specified",
-            user_interest: interest || "Not specified",
+            user_country: country,
+            user_interest: interest,
             user_message: message,
             submitted_at: new Date().toISOString(),
+            // include to_email in case template expects it
+            to_email: EMAILJS_TO_EMAIL,
           };
 
-          if (window.emailjs) {
-            emailjs
-              .send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-              .then(
-                function (response) {
-                  setStatus("Thanks — you're on the waitlist!", "limegreen");
-                  form.reset();
-                  document.getElementById("selectedVal").textContent =
-                    "Select a country";
-                  document.getElementById("selectedInterest").textContent =
-                    "New drops & collections";
-                  document.getElementById("country").value = "";
-                  document.getElementById("interest").value =
-                    "New drops & collections";
-                },
-                function (err) {
-                  console.error("EmailJS error:", err);
-                  setStatus("Something went wrong. Try again later.", "tomato");
-                }
-              );
-          } else {
-            // fallback for testing (no EmailJS)
-            console.log("Would send:", templateParams);
-            setStatus('(Test) You\'re on the waitlist","limegreen"');
+          // double-check emailjs exists
+          if (!window.emailjs || !emailjs.send) {
+            console.warn("EmailJS not available on window.");
+            // fallback: log and show success message for testing
+            console.log("FALLBACK send:", templateParams);
+            setStatus("(Test) You're on the waitlist", "limegreen");
             form.reset();
+            return;
           }
+
+          // send and provide detailed console output for debugging
+          emailjs
+            .send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+            .then(
+              function (response) {
+                // EmailJS may return an object — show some details
+                console.info("EmailJS send success:", response);
+                setStatus("Thanks — you're on the waitlist!", "limegreen");
+                form.reset();
+                // reset selects text if those exist
+                const sel = document.getElementById("selectedVal");
+                if (sel) sel.textContent = "Select a country";
+                const selI = document.getElementById("selectedInterest");
+                if (selI) selI.textContent = "New drops & collections";
+                const hCountry = document.getElementById("country");
+                if (hCountry) hCountry.value = "";
+                const hInterest = document.getElementById("interest");
+                if (hInterest) hInterest.value = "New drops & collections";
+              },
+              function (err) {
+                // show full error details in console to help debug
+                console.error("EmailJS send error:", err);
+                // Provide a helpful message to user
+                setStatus(
+                  "Something went wrong sending email. Check EmailJS console & your Gmail settings.",
+                  "tomato"
+                );
+              }
+            )
+            .catch((err) => {
+              // final catch for unexpected errors
+              console.error("EmailJS unexpected error:", err);
+              setStatus("Unexpected error. See console for details.", "tomato");
+            });
         });
 
         clearBtn.addEventListener("click", () => {
           form.reset();
           setStatus("", "var(--muted)");
-          document.getElementById("selectedVal").textContent =
-            "Select a country";
-          document.getElementById("selectedInterest").textContent =
-            "New drops & collections";
-          document.getElementById("country").value = "";
-          document.getElementById("interest").value = "New drops & collections";
+          const sel = document.getElementById("selectedVal");
+          if (sel) sel.textContent = "Select a country";
+          const selI = document.getElementById("selectedInterest");
+          if (selI) selI.textContent = "New drops & collections";
+          const hCountry = document.getElementById("country");
+          if (hCountry) hCountry.value = "";
+          const hInterest = document.getElementById("interest");
+          if (hInterest) hInterest.value = "New drops & collections";
         });
       })();
     </script>
