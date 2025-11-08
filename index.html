@@ -826,7 +826,7 @@
               .send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
               .then(
                 function (response) {
-                  setStatus("Thanks — you're on the waitlist!\", 'limegreen");
+                  setStatus("Thanks — you're on the waitlist!", "limegreen");
                   form.reset();
                   document.getElementById("selectedVal").textContent =
                     "Select a country";
