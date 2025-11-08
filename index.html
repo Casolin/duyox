@@ -859,7 +859,13 @@
             user_country: country,
             user_interest: interest,
             user_message: message,
-            submitted_at: new Date().toISOString(),
+            submitted_at:
+              new Date().getMonth() +
+              1 +
+              "/" +
+              new Date().getDate() +
+              "/" +
+              new Date().getFullYear(),
             // include to_email in case template expects it
             to_email: EMAILJS_TO_EMAIL,
           };
