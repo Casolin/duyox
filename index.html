@@ -1,11 +1,865 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>DUYOX — Pre-register</title>
+    <style>
+      :root {
+        --bg-black: #151515;
+        --card: #171717;
+        --accent: #ff8a33;
+        --accent-2: #ffb27a;
+        --muted: #cfcfcf;
+        --glass: rgba(255, 255, 255, 0.03);
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        /* allow vertical scroll on mobile if needed */
+        overflow-x: hidden;
+        overflow-y: auto;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto,
+          "Helvetica Neue", Arial;
+        background: var(--bg-black);
+        color: #fff;
+      }
+
+      /* Particle background canvas */
+      #dragonParticles {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -4;
+        pointer-events: none;
+        background: radial-gradient(circle at center, #0c0c0c 0%, #000 100%);
+      }
+
+      /* dark overlay to make text pop */
+      #bgOverlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.55),
+          rgba(0, 0, 0, 0.7)
+        );
+        z-index: -3;
+        pointer-events: none;
+      }
+
+      /* centered layout */
+      .viewport {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
+        box-sizing: border-box;
+      }
+      .card {
+        width: 100%;
+        max-width: 980px;
+        border-radius: 14px;
+        padding: 34px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        display: grid;
+        grid-template-columns: 1fr 440px;
+        gap: 28px;
+        align-items: center;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        background-color: var(--card);
+        backdrop-filter: blur(4px);
+        z-index: 1;
+        position: relative;
+      }
+
+      /* left content */
+      .brand {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .brand img.logo {
+        width: 66px;
+        height: 66px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 8px;
+      }
+      .brand .meta {
+        line-height: 1;
+      }
+      .brand .meta .title {
+        color: var(--accent);
+        font-weight: 700;
+        letter-spacing: 0.6px;
+      }
+      .lead {
+        color: var(--muted);
+        margin-top: 8px;
+        font-size: 14px;
+      }
+      h1 {
+        color: #fff;
+        margin: 8px 0 0 0;
+        font-size: 28px;
+      }
+
+      /* form */
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      input[type="text"],
+      input[type="email"],
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.02);
+        color: #fff;
+        font-size: 15px;
+        outline: none;
+      }
+      textarea {
+        min-height: 86px;
+        resize: vertical;
+      }
+      .row {
+        display: flex;
+        gap: 40px;
+      }
+      .row .field {
+        flex: 1;
+        min-width: 0;
+      }
+      .row .field input {
+        display: block;
+      }
+
+      /* submit */
+      .actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 6px;
+      }
+      button.btn {
+        background: linear-gradient(180deg, var(--accent), var(--accent-2));
+        color: #111;
+        padding: 12px 18px;
+        border-radius: 10px;
+        border: 0;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(255, 138, 51, 0.18);
+        transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.2, 1),
+          box-shadow 0.22s, filter 0.22s;
+      }
+      button.btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 36px rgba(255, 138, 51, 0.28);
+        filter: brightness(1.06);
+      }
+      button.btn:active {
+        transform: translateY(-1px);
+      }
+      button.subtle {
+        background: transparent;
+        border: 0;
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .status {
+        height: 20px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      /* Custom select (country & interest) */
+      .select-wrap {
+        position: relative;
+      }
+      .select-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.01);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        cursor: pointer;
+        color: #fff;
+      }
+      .select-trigger .val {
+        color: #fff;
+      }
+      .select-arrow {
+        margin-left: 12px;
+        opacity: 0.9;
+        transition: transform 0.2s;
+      }
+      .select-wrap.open .select-arrow {
+        transform: rotate(180deg);
+      }
+
+      .options {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 10px);
+        z-index: 30;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 1), rgba(0, 0, 0, 1));
+        border-radius: 10px;
+        padding: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        max-height: calc((38px * 6) + 12px);
+        overflow: auto;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        display: none; /* ensure closed on load */
+      }
+      .option {
+        padding: 10px 12px;
+        border-radius: 8px;
+        margin: 6px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .option:hover {
+        background: rgba(255, 255, 255, 0.02);
+        color: #fff;
+      }
+      .options::-webkit-scrollbar {
+        width: 9px;
+      }
+      .options::-webkit-scrollbar-thumb {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 138, 51, 0.15),
+          rgba(255, 138, 51, 0.28)
+        );
+        border-radius: 20px;
+      }
+
+      /* small screens */
+      @media (max-width: 980px) {
+        .card {
+          grid-template-columns: 1fr;
+          max-width: 720px;
+          padding: 22px;
+        }
+        .brand img.logo {
+          width: 56px;
+          height: 56px;
+        }
+        .options {
+          left: 0;
+          right: 0;
+        }
+        .row {
+          flex-direction: column;
+          gap: 20px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>DUYOX</h1>
+    <!-- PARTICLE CANVAS (works reliably) -->
+    <canvas id="dragonParticles" aria-hidden="true"></canvas>
+    <div id="bgOverlay" aria-hidden="true"></div>
+
+    <div class="viewport">
+      <div class="card" role="region" aria-label="Pre-register card">
+        <div class="left">
+          <div class="brand">
+            <img
+              src="images/logo.png"
+              alt="Duyox logo"
+              class="logo"
+              onerror="this.style.display='none'"
+            />
+            <div class="meta">
+              <div class="title">DUYOX</div>
+              <div style="color: var(--muted); font-size: 13px">
+                Premium Gym & Lifestyle
+              </div>
+            </div>
+          </div>
+
+          <h1>Pre-register for the DUYOX Launch</h1>
+          <p class="lead">
+            Early access, limited releases, launch discounts — be first in line.
+            We'll notify you by email.
+          </p>
+
+          <div style="margin-top: 14px; color: var(--muted); font-size: 13px">
+            <strong style="color: var(--muted)">Why sign up?</strong>
+            <ul style="margin: 8px 0 0 18px; padding: 0; color: var(--muted)">
+              <li>Early access & limited releases</li>
+              <li>Launch-only discounts</li>
+              <li>Behind-the-scenes & community drops</li>
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <form id="preRegForm" autocomplete="on" novalidate>
+            <div class="field">
+              <label for="name">Full name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Your name"
+                required
+              />
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="email">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+
+              <div class="field">
+                <label for="country">Country</label>
+                <!-- custom dropdown -->
+                <div
+                  class="select-wrap"
+                  id="countrySelect"
+                  tabindex="0"
+                  aria-haspopup="listbox"
+                >
+                  <div class="select-trigger" id="countryTrigger">
+                    <span class="val" id="selectedVal">Select a country</span>
+                    <svg
+                      class="select-arrow"
+                      width="16"
+                      height="10"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path
+                        d="M6 9l6 6 6-6"
+                        stroke="white"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </div>
+
+                  <div
+                    class="options"
+                    id="optionsList"
+                    role="listbox"
+                    aria-labelledby="country"
+                  >
+                    <!-- JS inserts options -->
+                  </div>
+
+                  <!-- hidden input to store selected country for form submission -->
+                  <input type="hidden" id="country" name="country" value="" />
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="interest">What are you most interested in?</label>
+              <!-- custom interest dropdown (styled same as country) -->
+              <div
+                class="select-wrap"
+                id="interestSelect"
+                tabindex="0"
+                aria-haspopup="listbox"
+              >
+                <div class="select-trigger" id="interestTrigger">
+                  <span class="val" id="selectedInterest"
+                    >New drops & collections</span
+                  >
+                  <svg
+                    class="select-arrow"
+                    width="16"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden
+                  >
+                    <path
+                      d="M6 9l6 6 6-6"
+                      stroke="white"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div
+                  class="options"
+                  id="interestOptions"
+                  role="listbox"
+                  aria-labelledby="interest"
+                >
+                  <!-- JS inserts interest options -->
+                </div>
+                <input
+                  type="hidden"
+                  id="interest"
+                  name="interest"
+                  value="New drops & collections"
+                />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="message">Message (optional)</label>
+              <textarea
+                id="message"
+                name="message"
+                placeholder="Any size requests or questions?"
+              ></textarea>
+            </div>
+
+            <div
+              style="
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 6px;
+              "
+            >
+              <div style="display: flex; gap: 8px; align-items: center">
+                <input id="terms" name="terms" type="checkbox" required />
+                <label for="terms" style="color: var(--muted); font-size: 13px"
+                  >I agree to receive emails from DUYOX</label
+                >
+              </div>
+              <div class="status" id="status"></div>
+            </div>
+
+            <div class="actions">
+              <button class="btn" type="submit">Pre-register</button>
+              <button class="subtle" type="button" id="clearBtn">Clear</button>
+            </div>
+
+            <div style="margin-top: 10px; color: var(--muted); font-size: 12px">
+              We respect your privacy. You can opt out anytime.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+
+    <script>
+      /* ========== CONFIG: replace with your EmailJS values ========== */
+      const EMAILJS_PUBLIC_KEY = "6qMYSrWxZ9b0hWUVp";
+      const EMAILJS_SERVICE_ID = "service_topg";
+      const EMAILJS_TEMPLATE_ID = "template_0zxho3h";
+      /* ============================================================= */
+
+      // --- Particle background (works reliably) ---
+      (function () {
+        const canvas = document.getElementById("dragonParticles");
+        const ctx = canvas.getContext("2d");
+        let DPR = window.devicePixelRatio || 1;
+
+        function resize() {
+          DPR = window.devicePixelRatio || 1;
+          canvas.width = Math.floor(window.innerWidth * DPR);
+          canvas.height = Math.floor(window.innerHeight * DPR);
+          canvas.style.width = window.innerWidth + "px";
+          canvas.style.height = window.innerHeight + "px";
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        const particles = [];
+        const NUM = 90;
+        const colors = ["#ff8a33", "#ffb27a", "#ff6b00"];
+
+        function rand(min, max) {
+          return Math.random() * (max - min) + min;
+        }
+
+        for (let i = 0; i < NUM; i++) {
+          particles.push({
+            x: rand(0, window.innerWidth),
+            y: rand(0, window.innerHeight),
+            r: rand(0.8, 3.2),
+            dx: rand(-0.25, 0.25),
+            dy: rand(-0.6, -0.1),
+            hue: colors[Math.floor(Math.random() * colors.length)],
+            alpha: rand(0.35, 0.9),
+            phase: rand(0, Math.PI * 2),
+          });
+        }
+
+        let lastT = performance.now();
+        function draw(t) {
+          const dt = (t - lastT) / 1000;
+          lastT = t;
+          // soft translucent background for trailing effect
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          particles.forEach((p) => {
+            // slow horizontal drift using sine for organic movement
+            p.phase += dt * 0.8;
+            p.x += p.dx + Math.sin(p.phase) * 0.2;
+            p.y += p.dy;
+            if (p.y < -40) {
+              p.y = window.innerHeight + rand(0, 60);
+              p.x = rand(0, window.innerWidth);
+            }
+            // wrap horizontally
+            if (p.x < -50) p.x = window.innerWidth + 50;
+            if (p.x > window.innerWidth + 50) p.x = -50;
+
+            // draw glow radial
+            const radius = p.r * 6;
+            const grad = ctx.createRadialGradient(
+              p.x,
+              p.y,
+              0,
+              p.x,
+              p.y,
+              radius
+            );
+            grad.addColorStop(0, hexToRgba(p.hue, p.alpha));
+            grad.addColorStop(0.35, hexToRgba(p.hue, p.alpha * 0.6));
+            grad.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.beginPath();
+            ctx.fillStyle = grad;
+            ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // small core dot
+            ctx.beginPath();
+            ctx.fillStyle = hexToRgba(p.hue, 1);
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          requestAnimationFrame(draw);
+        }
+        function hexToRgba(hex, a) {
+          // hex like #ff8a33
+          const m = hex.replace("#", "");
+          const r = parseInt(m.substring(0, 2), 16);
+          const g = parseInt(m.substring(2, 4), 16);
+          const b = parseInt(m.substring(4, 6), 16);
+          return `rgba(${r},${g},${b},${a})`;
+        }
+        requestAnimationFrame(draw);
+      })();
+
+      // --- Custom selects: Country & Interest ---
+      (function () {
+        const europeanCountries = [
+          "Albania",
+          "Andorra",
+          "Austria",
+          "Belarus",
+          "Belgium",
+          "Bosnia & Herzegovina",
+          "Bulgaria",
+          "Croatia",
+          "Cyprus",
+          "Czech Republic",
+          "Denmark",
+          "Estonia",
+          "Finland",
+          "France",
+          "Germany",
+          "Greece",
+          "Hungary",
+          "Iceland",
+          "Ireland",
+          "Italy",
+          "Kosovo",
+          "Latvia",
+          "Liechtenstein",
+          "Lithuania",
+          "Luxembourg",
+          "Malta",
+          "Moldova",
+          "Monaco",
+          "Montenegro",
+          "Netherlands",
+          "North Macedonia",
+          "Norway",
+          "Poland",
+          "Portugal",
+          "Romania",
+          "Russia",
+          "San Marino",
+          "Serbia",
+          "Slovakia",
+          "Slovenia",
+          "Spain",
+          "Sweden",
+          "Switzerland",
+          "Ukraine",
+          "United Kingdom",
+        ];
+
+        const interestOptions = [
+          "New drops & collections",
+          "Discounts & codes",
+          "Collaborations & athletes",
+          "All of the above",
+        ];
+
+        // Country select
+        const optionsList = document.getElementById("optionsList");
+        const selectedVal = document.getElementById("selectedVal");
+        const hiddenCountry = document.getElementById("country");
+
+        // Populate countries
+        europeanCountries.forEach((country) => {
+          const d = document.createElement("div");
+          d.className = "option";
+          d.tabIndex = 0;
+          d.role = "option";
+          d.textContent = country;
+          d.addEventListener("click", () => {
+            selectedVal.textContent = country;
+            hiddenCountry.value = country;
+            closeCountry();
+          });
+          d.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              selectedVal.textContent = country;
+              hiddenCountry.value = country;
+              closeCountry();
+            }
+          });
+          optionsList.appendChild(d);
+        });
+        // ensure closed on load
+        optionsList.style.display = "none";
+
+        const selectWrap = document.getElementById("countrySelect");
+        const countryTrigger = document.getElementById("countryTrigger");
+
+        function openCountry() {
+          selectWrap.classList.add("open");
+          optionsList.style.display = "block";
+        }
+        function closeCountry() {
+          selectWrap.classList.remove("open");
+          optionsList.style.display = "none";
+        }
+
+        countryTrigger.addEventListener("click", (e) => {
+          const isOpen = selectWrap.classList.contains("open");
+          if (isOpen) closeCountry();
+          else openCountry();
+        });
+
+        // close when clicking outside
+        document.addEventListener("click", (e) => {
+          if (!selectWrap.contains(e.target)) closeCountry();
+        });
+
+        // keyboard
+        selectWrap.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            const isOpen = selectWrap.classList.contains("open");
+            if (isOpen) closeCountry();
+            else openCountry();
+          }
+          if (e.key === "Escape") closeCountry();
+        });
+
+        // Interest select (same style)
+        const interestWrap = document.getElementById("interestSelect");
+        const interestTrigger = document.getElementById("interestTrigger");
+        const interestOptionsDiv = document.getElementById("interestOptions");
+        const hiddenInterest = document.getElementById("interest");
+        const selectedInterest = document.getElementById("selectedInterest");
+
+        interestOptions.forEach((opt) => {
+          const d = document.createElement("div");
+          d.className = "option";
+          d.tabIndex = 0;
+          d.role = "option";
+          d.textContent = opt;
+          d.addEventListener("click", () => {
+            selectedInterest.textContent = opt;
+            hiddenInterest.value = opt;
+            closeInterest();
+          });
+          d.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              selectedInterest.textContent = opt;
+              hiddenInterest.value = opt;
+              closeInterest();
+            }
+          });
+          interestOptionsDiv.appendChild(d);
+        });
+        interestOptionsDiv.style.display = "none";
+        function openInterest() {
+          interestWrap.classList.add("open");
+          interestOptionsDiv.style.display = "block";
+        }
+        function closeInterest() {
+          interestWrap.classList.remove("open");
+          interestOptionsDiv.style.display = "none";
+        }
+        interestTrigger.addEventListener("click", () => {
+          const isOpen = interestWrap.classList.contains("open");
+          if (isOpen) closeInterest();
+          else openInterest();
+        });
+        document.addEventListener("click", (e) => {
+          if (!interestWrap.contains(e.target)) closeInterest();
+        });
+        interestWrap.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            const isOpen = interestWrap.classList.contains("open");
+            if (isOpen) closeInterest();
+            else openInterest();
+          }
+          if (e.key === "Escape") closeInterest();
+        });
+
+        // Accessibility: ensure options scroll independently
+        optionsList.addEventListener("wheel", () => {
+          /* allow scroll */
+        });
+        interestOptionsDiv.addEventListener("wheel", () => {
+          /* allow scroll */
+        });
+      })();
+
+      // --- EmailJS & form handling (keeps your logic) ---
+      (function () {
+        if (!window.emailjs) {
+          console.warn("EmailJS not loaded (still fine for testing).");
+        } else {
+          emailjs.init(EMAILJS_PUBLIC_KEY);
+        }
+
+        const form = document.getElementById("preRegForm");
+        const statusEl = document.getElementById("status");
+        const clearBtn = document.getElementById("clearBtn");
+
+        function setStatus(txt, color = "var(--muted)") {
+          statusEl.textContent = txt;
+          statusEl.style.color = color;
+        }
+
+        function validateEmail(email) {
+          const re =
+            /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\\.,;:\s@\"]+\.)+[^<>()[\]\\.,;:\s@\"]{2,})$/i;
+          return re.test(String(email).toLowerCase());
+        }
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          const name = form.name.value.trim();
+          const email = form.email.value.trim().toLowerCase();
+          const country = document.getElementById("country").value;
+          const interest = document.getElementById("interest").value;
+          const message = form.message.value.trim();
+          const agreed = form.terms.checked;
+
+          if (!name) {
+            setStatus("Please enter your name", "orange");
+            return;
+          }
+          if (!email || !validateEmail(email)) {
+            setStatus("Please enter a valid email", "orange");
+            return;
+          }
+          if (!agreed) {
+            setStatus("Please agree to receive emails", "orange");
+            return;
+          }
+
+          setStatus("Sending…", "lightblue");
+
+          const templateParams = {
+            user_name: name,
+            user_email: email,
+            user_country: country || "Not specified",
+            user_interest: interest || "Not specified",
+            user_message: message,
+            submitted_at: new Date().toISOString(),
+          };
+
+          if (window.emailjs) {
+            emailjs
+              .send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+              .then(
+                function (response) {
+                  setStatus("Thanks — you're on the waitlist!\", 'limegreen");
+                  form.reset();
+                  document.getElementById("selectedVal").textContent =
+                    "Select a country";
+                  document.getElementById("selectedInterest").textContent =
+                    "New drops & collections";
+                  document.getElementById("country").value = "";
+                  document.getElementById("interest").value =
+                    "New drops & collections";
+                },
+                function (err) {
+                  console.error("EmailJS error:", err);
+                  setStatus("Something went wrong. Try again later.", "tomato");
+                }
+              );
+          } else {
+            // fallback for testing (no EmailJS)
+            console.log("Would send:", templateParams);
+            setStatus('(Test) You\'re on the waitlist","limegreen"');
+            form.reset();
+          }
+        });
+
+        clearBtn.addEventListener("click", () => {
+          form.reset();
+          setStatus("", "var(--muted)");
+          document.getElementById("selectedVal").textContent =
+            "Select a country";
+          document.getElementById("selectedInterest").textContent =
+            "New drops & collections";
+          document.getElementById("country").value = "";
+          document.getElementById("interest").value = "New drops & collections";
+        });
+      })();
+    </script>
   </body>
 </html>
